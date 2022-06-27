@@ -19,7 +19,7 @@ export class LynMetService {
       ess.addEventListener('lx', e => {
         const message = e.data as string;
         const splitMessage = message.split(/\r?\n/);
-        console.log(splitMessage);
+        // console.log(splitMessage);
         const datas = splitMessage.map(data => JSON.parse(data) as LynDto[])
         subscriber.next(
           datas.flat().map(dto => lynDtoToLyn(dto))
@@ -37,7 +37,8 @@ export class LynMetService {
 
   getLynHistory(minutes: number): Observable<Lyn[]> {
     const sec = minutes * 60;
-    return this.http.get<LynDto[]>(`https://lyn.met.no/fetch/1656336591/${sec}`).pipe(
+    const epochSecoundsStartTime = Math.floor(new Date().getTime() / 1000) - (sec);
+    return this.http.get<LynDto[]>(`https://lyn.met.no/fetch/${epochSecoundsStartTime}/${sec}`).pipe(
       map(list => {
         return list.map(dto => lynDtoToLyn(dto))
       })
