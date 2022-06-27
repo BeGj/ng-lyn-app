@@ -16,8 +16,9 @@ import TileLayer from 'ol/layer/WebGLTile';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent  implements OnInit{
+export class AppComponent implements OnInit {
   timeNow = new Date().getTime();
+
   lyn$ = this.lynMet.getServerSentEvent().pipe(shareReplay());
   lynFromLast10Min$ = this.lynMet.getLynHistory(10).pipe(shareReplay());
   accumulatedLynnedslag$ = this.lynFromLast10Min$.pipe(
@@ -26,6 +27,7 @@ export class AppComponent  implements OnInit{
     }))),
     scan((acc, curr) => [...acc, ...curr]),
   );
+
   private olMap!: Map
   private glStyle: LiteralStyle = {
     "symbol": {
@@ -48,6 +50,7 @@ export class AppComponent  implements OnInit{
       "rotateWithView": true
     }
   };
+
   private lynLayer = new WebGLPointsLayer({
     source: new Vector<Point>({
       features: []
@@ -57,10 +60,9 @@ export class AppComponent  implements OnInit{
   });
 
 
-
   constructor(
     private lynMet: LynMetService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.olMap = new Map({
@@ -72,39 +74,53 @@ export class AppComponent  implements OnInit{
         this.lynLayer
       ],
       view: new View({
-        center: fromLonLat([20.5651,68.7628]),
+        center: fromLonLat([20.5651, 68.7628]),
         zoom: 4
       })
     });
 
+    this.getUserLocationAndFlyToIt();
+
+    this.subscribeToRealtimeLyn();
+
+    this.subscribeToLynHistory();
+
+  }
+
+  private subscribeToLynHistory() {
+    this.lynFromLast10Min$.subscribe(lynEvent => {
+      this.lynLayer.getSource()?.addFeatures(
+        lynEvent.map(lyn => {
+          const point = new Point(fromLonLat(lyn.point));
+          const feature = new Feature({
+            geometry: point
+          });
+          feature.set('time', lyn.datetime.getTime());
+          return feature;
+        })
+      );
+    });
+  }
+
+  private subscribeToRealtimeLyn() {
+    this.lyn$.subscribe(lynEvent => {
+      this.lynLayer.getSource()?.addFeatures(
+        lynEvent.map(lyn => {
+          const point = new Point(fromLonLat(lyn.point));
+          return new Feature({
+            geometry: point
+          });
+        })
+      );
+    });
+  }
+
+  private getUserLocationAndFlyToIt() {
     navigator.geolocation.getCurrentPosition(position => {
       this.olMap.getView().animate({
         center: fromLonLat([position.coords.longitude, position.coords.latitude]),
         zoom: 10
       });
     });
-    this.lyn$.subscribe(lynEvent => {
-      this.lynLayer.getSource()?.addFeatures(
-        lynEvent.map(lyn => {
-          const point = new Point(fromLonLat(lyn.Point))
-          return new Feature({
-            geometry: point
-          });
-        })
-      )
-    });
-    this.lynFromLast10Min$.subscribe(lynEvent => {
-      this.lynLayer.getSource()?.addFeatures(
-        lynEvent.map(lyn => {
-          const point = new Point(fromLonLat(lyn.Point))
-          const feature =  new Feature({
-            geometry: point
-          });
-          feature.set('time',lyn.Epoch.getTime())
-          return feature;
-        })
-      )
-    });
-
   }
 }
