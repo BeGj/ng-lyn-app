@@ -12,7 +12,7 @@ import TileLayer from 'ol/layer/WebGLTile';
 import { containsExtent } from 'ol/extent';
 import { defaults as defaultControls, FullScreen, Attribution } from 'ol/control'
 import Geolocation from 'ol/Geolocation'
-import { defaults as defaultInteractions } from 'ol/interaction'
+import { defaults as defaultInteractions, PinchZoom } from 'ol/interaction'
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import { Circle as CircleStyle, Fill, Stroke, Style } from 'ol/style';
@@ -26,7 +26,7 @@ import { LynMetService } from '../services/lyn-met.service';
   templateUrl: './ligthning-map.component.html',
   styleUrls: ['./ligthning-map.component.scss']
 })
-export class LigthningMapComponent implements OnInit {
+export class LigthningMapComponent implements OnInit, AfterViewInit {
   timeNowInS = new Date().getTime() / 1000;
 
   lyn$ = this.lynMet.getServerSentEvent().pipe(shareReplay());
@@ -91,8 +91,11 @@ export class LigthningMapComponent implements OnInit {
     ],
     interactions: defaultInteractions({
       altShiftDragRotate: false,
-      pinchRotate: false
-    }),
+      pinchRotate: false,
+      shiftDragZoom: false,
+    }).extend([
+      new PinchZoom()
+    ]),
     view: new View({
       center: fromLonLat([20.5651, 68.7628]),
       zoom: 4
@@ -107,7 +110,7 @@ export class LigthningMapComponent implements OnInit {
 
   constructor(
     private lynMet: LynMetService
-    ) { }
+  ) { }
   ngAfterViewInit(): void {
     this.olMap.setTarget('olMap');
   }
