@@ -15,7 +15,7 @@ This app can be used when there is a lot of thunder and lightning in your area. 
 
 Listens to same source as lyn.met.no
 
-`https://github.com/BeGj/ng-lyn-app/blob/master/src/app/services/lyn-met.service.ts`
+`src/app/services/lyn-met.service.ts`
 
 ## Sound effects
 
